@@ -1,18 +1,48 @@
+
 #include <Arduino.h>
 
-const int irPin = 4;
-const unsigned long TIEMPO_ESTADO_MS = 10000;  // 10 segundos
+const int irEmisor = 4;
+const int irReceptor = 5;
+
+int medirReceptor() {
+    long suma = 0;
+
+    for (int i = 0; i < 10; i++) {
+        suma += analogRead(irReceptor);
+        delay(10);
+    }
+
+    return suma / 10;
+}
 
 void setup() {
-    pinMode(irPin, OUTPUT);
+    Serial.begin(115200);
+
+    pinMode(irEmisor, OUTPUT);
+    digitalWrite(irEmisor, LOW);
+
+    analogReadResolution(12);
 }
 
 void loop() {
-    // Salida encendida durante 10 segundos
-    digitalWrite(irPin, HIGH);
-    delay(TIEMPO_ESTADO_MS);
+    digitalWrite(irEmisor, LOW);
+    delay(200);
+    int sinIR = medirReceptor();
 
-    // Salida apagada durante 10 segundos
-    digitalWrite(irPin, LOW);
-    delay(TIEMPO_ESTADO_MS);
+    digitalWrite(irEmisor, HIGH);
+    delay(200);
+    int conIR = medirReceptor();
+
+    int diferencia = sinIR - conIR;
+
+    Serial.print("Sin IR: ");
+    Serial.print(sinIR);
+
+    Serial.print(" | Con IR: ");
+    Serial.print(conIR);
+
+    Serial.print(" | Diferencia: ");
+    Serial.println(diferencia);
+
+    delay(1000);
 }
