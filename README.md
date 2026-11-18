@@ -20,7 +20,12 @@ The difference is calculated as `ADC(IR off) - ADC(IR on)`. Its sign and magnitu
 
 - [Firmware source — main.cpp](firmware/ir-doorway-detector/src/main.cpp)
 - [PlatformIO project configuration](firmware/ir-doorway-detector/platformio.ini)
+- [Circuit schematics and calculations (LaTeX, Spanish)](docs/circuitos_y_calculos.tex)
+- [Experiment log and troubleshooting (LaTeX, Spanish)](docs/registro_de_avances.tex)
+- [Recorded measurements](tests/medidas.md)
+- [How to compile the LaTeX reports](docs/COMPILACION.md)
 - [ESP32-S3 datasheets](docs/)
+- [Earlier firmware experiments](firmware/ir-doorway-detector/examples/)
 - **Tools:** VS Code, PlatformIO, Arduino framework, multimeter and ESP32 ADC
 
 ## Reproducing the current measurement
@@ -39,7 +44,7 @@ The difference is calculated as `ADC(IR off) - ADC(IR on)`. Its sign and magnitu
 - Compare ambient light and IR-illuminated ADC values.
 - Check sensitivity to distance, room lighting and occlusion.
 - Establish a threshold using recorded measurements and test false triggers.
-- Document the tested circuit and calculations; design and validate the PCB.
+- Finish and validate the optical measurements; design and validate the PCB.
 
 ## What I am learning
 

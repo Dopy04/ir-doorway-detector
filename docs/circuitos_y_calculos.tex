@@ -1,0 +1,265 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[spanish,es-noquoting]{babel}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.35cm,headheight=14pt]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{siunitx}
+\sisetup{output-decimal-marker={,},per-mode=symbol}
+\usepackage{circuitikz}
+\usepackage{tikz}
+\usepackage{booktabs,array,tabularx,longtable}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{needspace}
+\usepackage{listings}
+\usepackage[hidelinks]{hyperref}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.48em}
+\setlist[itemize]{leftmargin=1.35em,itemsep=0.1em,topsep=0.2em}
+\setlist[enumerate]{leftmargin=1.5em,itemsep=0.1em,topsep=0.2em}
+\renewcommand{\arraystretch}{1.14}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+\hypersetup{colorlinks=false,pdfborder={0 0 0}}
+\lstset{basicstyle=\ttfamily\small,keywordstyle=\color{black},commentstyle=\color{black},stringstyle=\color{black},frame=single,framerule=0.5pt,columns=fullflexible,keepspaces=true,showstringspaces=false,breaklines=true,xleftmargin=0.3em,xrightmargin=0.3em,aboveskip=0.7em,belowskip=0.7em}
+\newcommand{\titular}[2]{%
+  {\LARGE\bfseries #1\par}
+  \vspace{0.45em}
+  {\normalsize #2\par}
+  \vspace{0.45em}\hrule\vspace{0.9em}
+}
+
+\begin{document}
+\titular{Detector de paso por infrarrojos}{Circuitos, cálculos y medidas del prototipo \hfill 06/11/2026}
+
+\section{Objetivo y estado del trabajo}
+Quiero construir una barrera óptica para detectar cuándo alguien cruza una puerta. El emisor utiliza un LED infrarrojo y el receptor es un fototransistor. El microcontrolador se encarga de activar el emisor y leer la tensión generada en el receptor.
+
+En esta fase estoy utilizando mi placa ESP32-S3 N16R8 y una protoboard. Esta placa me sirve para comprobar la electrónica y preparar el programa. La PCB definitiva será un diseño propio con el microcontrolador soldado directamente, pero todavía no he elegido ese componente ni he implementado las notificaciones.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex, every node/.style={font=\small}]
+\node[draw,minimum width=3.15cm,minimum height=1.02cm,align=center] (tx) at (0,0) {LED infrarrojo\\$L$-53F3C + BC337};
+\node[draw,minimum width=3.1cm,minimum height=1.02cm,align=center] (rx) at (7,0) {Fototransistor\\BPW40};
+\draw[->,dashed] (tx.east) -- node[above]{Luz infrarroja} (rx.west);
+\node[draw,minimum width=3.2cm,minimum height=.86cm,align=center] (mcu) at (3.5,-2.15) {ESP32-S3\\GPIO4 / ADC GPIO5};
+\draw[->] (mcu.west) -| (tx.south);
+\draw[->] (rx.south) |- (mcu.east);
+\end{tikzpicture}
+\caption{Bloques utilizados para comprobar el detector. No es todavía un esquema de fabricación.}
+\end{figure}
+
+\subsection{Componentes de la prueba}
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}l l X@{}}
+\toprule
+Referencia & Componente & Función\\
+\midrule
+U1 & ESP32-S3 N16R8 & Programación y lectura ADC\\
+D1 & L-53F3C (940 nm) & Emisor infrarrojo\\
+Q1 & BC337 & Conmutación del emisor\\
+Q2 & BPW40 & Receptor óptico\\
+R1 & $\SI{180}{\ohm}$ & Limitación de corriente del LED IR\\
+R2 & $\SI{1}{\kilo\ohm}$ & Limitación de corriente de base\\
+R3 & $\SI{10}{\kilo\ohm}$ & Pull-up del receptor\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+La alimentación de las pruebas procede de \texttt{3V3} de la placa, alimentada a su vez por USB-C. Todos los puntos de masa son comunes.
+
+\section{Comprobación inicial de GPIO4}
+Antes del emisor infrarrojo conecté un LED visible y una resistencia de $\SI{330}{\ohm}$ para comprobar la salida digital. El programa alternaba \texttt{HIGH} y \texttt{LOW}; después utilicé estados fijos para facilitar las medidas con el multímetro.
+
+\begin{figure}[H]
+\centering
+\begin{circuitikz}[american currents, scale=0.95, transform shape]
+\draw (0,0) node[left]{GPIO4} to[R,l=$\SI{330}{\ohm}$] (3,0) to[led,l=LED visible] (5,0) -- (5,-1) node[ground]{};
+\end{circuitikz}
+\caption{Primera prueba de salida digital.}
+\end{figure}
+
+Si tomo una caída típica de $\SI{2.0}{\volt}$ para un LED rojo, la corriente estimada es
+\begin{equation}
+I_{\mathrm{LED}} \simeq \frac{3{,}3-2{,}0}{330}
+  =\SI{3.94}{\milli\ampere}.
+\end{equation}
+Este resultado es un cálculo previo, no una corriente medida. La prueba confirmó que GPIO4 podía conmutar aproximadamente entre $\SI{0}{\volt}$ y $\SI{3.3}{\volt}$.
+
+\section{Emisor infrarrojo con BC337}
+Para no hacer pasar toda la corriente del LED por el GPIO, añadí el BC337 como interruptor por el lado de masa. El LED se alimenta a través de R1 y el transistor recibe su señal de control mediante R2.
+
+\begin{figure}[H]
+\centering
+\begin{circuitikz}[american currents, scale=1, transform shape]
+\node[npn] (Q) at (4,1.0) {};
+\draw (4,5.1) node[above]{3V3}
+      to[R,l={$R_1: \SI{180}{\ohm}$}] (4,3.6)
+      to[led,l={$D_1$ (IR)}] (4,2.3)
+      -- (Q.C);
+\draw (Q.E) -- (4,-.5) node[ground]{};
+\draw (Q.B) to[R,l_={$R_2: \SI{1}{\kilo\ohm}$}] (0,1.0) node[left]{GPIO4};
+\node[right] at (Q.C) {\hspace{.25cm}C};
+\node[right] at (Q.E) {\hspace{.25cm}E};
+\node[above left] at (Q.B) {B};
+\node[right] at (4.75,1.0) {BC337};
+\end{circuitikz}
+\caption{Driver del LED infrarrojo. El ánodo del LED queda hacia R1 y el cátodo hacia el colector.}
+\end{figure}
+
+\subsection{Dimensionado}
+Para estimar la corriente del emisor utilicé $V_F\simeq\SI{1.2}{\volt}$ y $V_{CE(\mathrm{sat})}\simeq\SI{0.2}{\volt}$. Son valores de cálculo, no medidas de esta unidad.
+\begin{equation}
+I_{D1}=\frac{V_{CC}-V_F-V_{CE(\mathrm{sat})}}{R_1}
+=\frac{3{,}3-1{,}2-0{,}2}{180}
+\simeq\SI{10.6}{\milli\ampere}.
+\end{equation}
+
+Para la base, tomando $V_{BE}\simeq\SI{0.7}{\volt}$:
+\begin{equation}
+I_B\simeq\frac{3{,}3-0{,}7}{1000}
+=\SI{2.6}{\milli\ampere}.
+\end{equation}
+
+La disipación prevista de R1 con la corriente estimada queda aproximadamente en
+\begin{equation}
+P_{R1}=I_{D1}^{2}R_1\simeq\SI{0.020}{\watt}.
+\end{equation}
+
+\subsection{Medidas realizadas}
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}X r X@{}}
+\toprule
+Magnitud & Valor & Observación\\
+\midrule
+$V_{GPIO4}$ con HIGH & $\simeq\SI{3.3}{\volt}$ & Estado alto comprobado\\
+$V_{C}$ respecto a GND & $\SI{0.009}{\volt}$ & Medido con HIGH fijo\\
+Caída en R1 & $\simeq\SI{2.16}{\volt}$ & Medida con el LED activado\\
+$I_{D1}$ deducida de R1 & $\SI{12.0}{\milli\ampere}$ & Calculada, no medida directamente\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+A partir de la caída de tensión en R1:
+\begin{equation}
+I_{D1}=\frac{V_{R1}}{R_1}=\frac{2{,}16}{180}
+=\SI{12.0}{\milli\ampere}.
+\end{equation}
+
+La tensión de colector de $\SI{0.009}{\volt}$ indica que el nodo estaba muy próximo a masa durante esa prueba. Como no tomé todas las medidas a la vez, no utilizaré esas lecturas para estimar con precisión la caída del LED. El emisor queda validado para continuar con las pruebas ópticas.
+
+\textbf{Procedimiento de medida:} para medir R1 puse el multímetro en tensión continua, con una punta en cada extremo de la resistencia. Para medir directamente corriente en modo mA habría que abrir la rama e introducir el instrumento en serie.
+
+\section{Receptor con fototransistor BPW40}
+El receptor utiliza una resistencia de pull-up. La señal que leo en GPIO5 es la tensión del nodo entre R3 y el colector del fototransistor.
+
+\begin{figure}[H]
+\centering
+\begin{circuitikz}[scale=1,transform shape]
+\node[npn] (P) at (3.5,1.1) {};
+\draw (3.5,4.8) node[above]{3V3}
+  to[R,l={$R_3: \SI{10}{\kilo\ohm}$}] (3.5,3.0)
+  -- (3.5,2.35) node[circ] (N) {}
+  -- (P.C);
+\draw (N) -- (6.2,2.35) node[right]{GPIO5 (ADC)};
+\draw (P.E) -- (3.5,-.4) node[ground]{};
+\node[right] at (4.2,1.1) {BPW40};
+\draw[->] (1.55,2.6) -- (2.45,1.85);
+\draw[->] (1.65,1.9) -- (2.5,1.2);
+\node[left,align=right] at (1.6,2.4) {Luz IR};
+\end{circuitikz}
+\caption{Conexión eléctrica del receptor. La base dibujada en el símbolo de transistor no lleva una conexión externa.}
+\end{figure}
+
+Cuando el BPW40 recibe más luz, circula más corriente hacia masa y la tensión del nodo GPIO5 disminuye. Si lo tapo, el fototransistor conduce menos y R3 eleva la tensión hacia $\SI{3.3}{\volt}$.
+
+Para una tensión medida $V_{GPIO5}$ puedo calcular la corriente por la resistencia pull-up con
+\begin{equation}
+I_{R3}=\frac{3{,}3-V_{GPIO5}}{\SI{10}{\kilo\ohm}}.
+\end{equation}
+
+El ESP32-S3 dispone de un ADC de 12 bits, con lecturas digitales de 0 a 4095. Esos valores no deben tratarse como voltios sin considerar la configuración y calibración del ADC.
+
+\subsection{Primeras lecturas}
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}X c X@{}}
+\toprule
+Condición & ADC & Interpretación\\
+\midrule
+Iluminación normal & 3940--3945 & Algo de luz llega al BPW40\\
+Mano en la zona del haz & 4057--4067 & Disminuye la luz recibida\\
+Receptor totalmente tapado & 4095 & Lectura en el máximo del ADC\\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+La diferencia entre las dos primeras condiciones ronda 120 cuentas. No he comprobado todavía que esas variaciones se deban exclusivamente a mi LED IR: el sensor también responde a la iluminación de la habitación.
+
+Al principio el ADC se quedaba fijo en 4095. El problema era que había conectado el BPW40 con la polaridad invertida. Al corregir colector y emisor, el valor empezó a responder a la luz.
+
+\section{Montaje conjunto y posición de los sensores}
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex, every node/.style={font=\small}]
+\draw (0,0) -- (12.7,0);
+\node[draw,minimum width=2.25cm,minimum height=0.9cm] (led) at (2,1.25) {LED IR};
+\node[draw,minimum width=2.25cm,minimum height=0.9cm] (rx) at (10.7,1.25) {BPW40};
+\draw[->,dashed,thick] (led.east) -- node[above]{Eje óptico} (rx.west);
+\draw (1.7,.8) -- (1.7,0);
+\draw (10.4,.8) -- (10.4,0);
+\node[below] at (6.35,0) {Protoboard (representación lateral)};
+\end{tikzpicture}
+\caption{Para la prueba, las puntas de los dos componentes deben mirarse. Estar en la misma columna de la protoboard no garantiza una buena alineación óptica.}
+\end{figure}
+
+En la primera fotografía, el emisor y el receptor estaban apuntando hacia arriba. La corrección prevista consiste en orientar las dos cápsulas una frente a otra, empezando a 2--5 cm de distancia. Doblaré las patillas con cuidado, sin forzar la base del encapsulado ni permitir cortocircuitos entre terminales.
+
+\section{Prueba diferencial y próximas medidas}
+En lugar de mirar únicamente un valor absoluto del ADC, el código preparado mide el receptor con el emisor apagado y encendido. Calculo:
+\begin{equation}
+\Delta ADC=ADC_{\text{sin IR}}-ADC_{\text{con IR}}.
+\end{equation}
+Si nuestro emisor ilumina correctamente al receptor, espero un $\Delta ADC$ positivo. Al interrumpir el haz con un objeto opaco, la diferencia debería hacerse menor. Esta técnica ayuda a separar la contribución del LED de una iluminación ambiente que permanezca aproximadamente constante durante ambas lecturas.
+
+\Needspace{14\baselineskip}
+\begin{lstlisting}[language=C++,caption={Fragmento del ensayo diferencial preparado en PlatformIO.}]
+digitalWrite(irEmisor, LOW);
+delay(200);
+int sinIR = medirReceptor();
+
+digitalWrite(irEmisor, HIGH);
+delay(200);
+int conIR = medirReceptor();
+
+int diferencia = sinIR - conIR;
+\end{lstlisting}
+
+\textbf{Esta prueba todavía está pendiente de validar} con los sensores orientados frente a frente. Tampoco se ha implementado una portadora de 38 kHz. Encender y apagar el LED lentamente no equivale a una barrera IR modulada.
+
+\subsection{Tareas pendientes}
+\begin{enumerate}
+\item Comparar los valores \texttt{sinIR}, \texttt{conIR} y \texttt{diferencia} con el haz libre y bloqueado.
+\item Repetir la medida con diferentes condiciones de luz ambiental y a mayor distancia.
+\item Elegir el método de detección y comprobar falsos positivos y tiempo de respuesta.
+\item Implementar un aviso al móvil y registrar las pruebas.
+\item Seleccionar el microcontrolador desnudo, diseñar el esquemático en KiCad y fabricar la PCB.
+\end{enumerate}
+
+\section{Documentación utilizada}
+\begin{itemize}
+\item Kingbright, \emph{L-53F3C} (datasheet del LED emisor IR).
+\item onsemi, \emph{BC337} (datasheet del transistor NPN).
+\item Vishay / fabricante, \emph{BPW40} (datasheet del fototransistor).
+\item Espressif, \emph{ESP32-S3 Series Datasheet} (GPIO y ADC).
+\end{itemize}
+
+\end{document}
