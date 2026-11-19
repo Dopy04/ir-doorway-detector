@@ -132,4 +132,21 @@ PCB propia & Pendiente\\
 
 Con esas medidas podré escoger un umbral basado en datos y plantear las siguientes mejoras del circuito. Por ahora no doy por terminado el detector.
 
+\section{Actualización: validación óptica (19/11/2026)}
+Después de orientar el emisor y el receptor, repetí las medidas comparando el ADC con el LED IR apagado y encendido. La diferencia se separó claramente al bloquear el haz. Los intervalos que obtuve fueron:
+\begin{center}
+\begin{tabularx}{\linewidth}{@{}Xrr@{}}
+\toprule
+Iluminación & Haz libre & Bloqueado\\
+\midrule
+Lámpara & 3378--3385 & 323--638\\
+Luz ambiental & 3917--3924 & 391--604\\
+Oscuridad & 3913--3916 & 319--739\\
+\bottomrule
+\end{tabularx}
+\end{center}
+Entre el menor valor libre y el mayor bloqueado de todos los ensayos hay una separación de $3378-739=2639$ cuentas ADC. El montaje ha respondido bien en estas pruebas, pero todavía no he medido falsos disparos ni rapidez de detección. La documentación completa de esta sesión está en \texttt{informe\_validacion\_sensor\_ir.tex}.
+
+También he comprobado que el programa actual tarda aproximadamente \SI{1.6}{\second} por ciclo, porque alterna dos mediciones con pausas y un retardo final. Antes de probar pasos de personas tengo que reducir ese tiempo, establecer la histéresis y verificar el comportamiento con interrupciones breves.
+
 \end{document}

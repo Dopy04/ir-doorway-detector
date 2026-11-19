@@ -7,6 +7,7 @@ Desde esta carpeta, con una instalación de LaTeX que tenga los paquetes usados 
 ```bash
 latexmk -pdf -interaction=nonstopmode -halt-on-error circuitos_y_calculos.tex
 latexmk -pdf -interaction=nonstopmode -halt-on-error registro_de_avances.tex
+latexmk -pdf -interaction=nonstopmode -halt-on-error informe_validacion_sensor_ir.tex
 ```
 
 También se pueden abrir los archivos `.tex` por separado en Overleaf.
