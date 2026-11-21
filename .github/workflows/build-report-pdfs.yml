@@ -1,0 +1,37 @@
+name: Build report PDFs
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/build-report-pdfs.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  compile-reports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Install LaTeX dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends latexmk texlive-latex-base texlive-latex-extra texlive-lang-spanish texlive-pictures texlive-science texlive-fonts-recommended
+      - name: Compile reports
+        run: |
+          cd docs
+          for name in circuitos_y_calculos registro_de_avances informe_validacion_sensor_ir; do
+            latexmk -pdf -interaction=nonstopmode -halt-on-error "$name.tex"
+            test -s "$name.pdf"
+          done
+      - name: Publish PDFs to the repository
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/circuitos_y_calculos.pdf docs/registro_de_avances.pdf docs/informe_validacion_sensor_ir.pdf
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: publish compiled PDF reports"
+            git push
+          fi
