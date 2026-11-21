@@ -20,11 +20,10 @@ The difference is calculated as `ADC(IR off) - ADC(IR on)`. Its sign and magnitu
 
 - [Firmware source — main.cpp](firmware/ir-doorway-detector/src/main.cpp)
 - [PlatformIO project configuration](firmware/ir-doorway-detector/platformio.ini)
-- [IR sensor validation report — 19 November 2026 (LaTeX, Spanish)](docs/informe_validacion_sensor_ir.tex)
-- [Circuit schematics and calculations (LaTeX, Spanish)](docs/circuitos_y_calculos.tex)
-- [Experiment log and troubleshooting (LaTeX, Spanish)](docs/registro_de_avances.tex)
+- [IR sensor validation report — 19 November 2026 (PDF, Spanish)](docs/informe_validacion_sensor_ir.pdf)
+- [Circuit schematics and calculations (PDF, Spanish)](docs/circuitos_y_calculos.pdf)
+- [Experiment log and troubleshooting (PDF, Spanish)](docs/registro_de_avances.pdf)
 - [Recorded measurements](tests/medidas.md)
-- [How to compile the LaTeX reports](docs/COMPILACION.md)
 - [ESP32-S3 datasheets](docs/)
 - [Earlier firmware experiments](firmware/ir-doorway-detector/examples/)
 - **Tools:** VS Code, PlatformIO, Arduino framework, multimeter and ESP32 ADC
@@ -41,7 +40,7 @@ The difference is calculated as `ADC(IR off) - ADC(IR on)`. Its sign and magnitu
 
 ## Initial optical results (19 November 2026)
 
-All results below are ranges of the differential 12-bit ADC value `ADC(IR off) - ADC(IR on)`, not voltages. The full report is in [LaTeX](docs/informe_validacion_sensor_ir.tex).
+All results below are ranges of the differential 12-bit ADC value `ADC(IR off) - ADC(IR on)`, not voltages. The full report is in [PDF](docs/informe_validacion_sensor_ir.pdf).
 
 | Lighting | Clear beam | Blocked beam |
 |---|---:|---:|

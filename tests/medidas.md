@@ -52,4 +52,4 @@ El código actual tarda aproximadamente 1,6 s por ciclo de medida (sin contar pe
 - Probar luz solar directa y funcionamiento continuo.
 - Integrar avisos al móvil y diseñar la PCB.
 
-Informes: [circuitos y cálculos](../docs/circuitos_y_calculos.tex), [registro de avances](../docs/registro_de_avances.tex) y [validación inicial del sensor](../docs/informe_validacion_sensor_ir.tex).
+Informes: [circuitos y cálculos](../docs/circuitos_y_calculos.pdf), [registro de avances](../docs/registro_de_avances.pdf) y [validación inicial del sensor](../docs/informe_validacion_sensor_ir.pdf).
